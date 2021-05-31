@@ -13,7 +13,7 @@ class User(AbstractUser):
     ]
 
     role = models.CharField(max_length=1, choices=ROLES)
-    course_id = models.ManyToManyField('Course', related_name='user_course_id')
+    # course_id = models.ManyToManyField('Course', related_name='user_course_id')
 
     REQUIRED_FIELDS = ['email', 'password', 'role']
     USERNAME_FIELD = 'username'

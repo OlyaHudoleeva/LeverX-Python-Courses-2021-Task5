@@ -1,6 +1,6 @@
-from rest_framework import routers
-
-from lesson.viewsets import CourseViewSet
-
-router = routers.DefaultRouter()
-router.register('courses', CourseViewSet)
+# from rest_framework import routers
+#
+# from lesson.views import CourseViewSet
+#
+# router = routers.DefaultRouter()
+# router.register('courses', CourseViewSet, basename='courses')

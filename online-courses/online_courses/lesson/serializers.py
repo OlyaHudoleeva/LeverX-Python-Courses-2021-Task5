@@ -8,7 +8,8 @@ class UserCreateSerializer(UserSerializer):
     class Meta(UserCreateSerializer.Meta):
         model = User
         fields = ('id', 'email', 'username', 'password', 'first_name', 'last_name', 'role')
-
+        # extra_kwargs = {'courses': {'required': False}}
+        depth = 1
 
 # class StudentSerializer(serializers.ModelSerializer):
 #     class Meta:
@@ -23,6 +24,11 @@ class UserCreateSerializer(UserSerializer):
 #
 #
 class CourseSerializer(serializers.ModelSerializer):
+    # user_id = UserSerializer(many=True)
+
+    user_id = serializers.PrimaryKeyRelatedField(many=True, queryset=User.objects.all())
+
+
     class Meta:
         model = Course
         fields = '__all__'
