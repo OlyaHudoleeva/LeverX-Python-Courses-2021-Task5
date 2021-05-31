@@ -1,32 +1,29 @@
-from rest_framework import viewsets
-from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Course, User
+from .models import Course, Student, Teacher
 from .permissions import IsTeacherOrReadOnly
 from .serializers import CourseSerializer, UserCreateSerializer
 
 
 class UserRegistration(APIView):
+    permission_classes = [AllowAny]
 
     def post(self, request):
+
         serializer_obj = UserCreateSerializer(data=request.data)
         if serializer_obj.is_valid():
             serializer_obj.save()
+            if serializer_obj.data.get('role') == 'T':
+                new_teacher = Teacher.objects.create(id=serializer_obj.instance)
+                new_teacher.save()
+            elif serializer_obj.data.get('role') == 'S':
+                new_student = Student.objects.create(id=serializer_obj.instance)
+                new_student.save()
             return Response(serializer_obj.data, status=status.HTTP_201_CREATED)
         return Response(serializer_obj.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-# class StudentAPI(viewsets.ModelViewSet):
-#     serializer_class = StudentSerializer
-#     queryset = Student.objects.all()
-#
-#
-# class TeacherAPI(viewsets.ModelViewSet):
-#     serializer_class = TeacherSerializer
-#     queryset = Teacher.objects.all()
 
 
 class CourseList(APIView):
@@ -38,7 +35,10 @@ class CourseList(APIView):
         return Response(serializer_obj.data)
 
     def post(self, request):
-        serializer_obj = CourseSerializer(data={'name': request.data['name'], 'description': request.data['description'], 'period_from': request.data['period_from'], 'period_to': request.data['period_to'], 'user_id': [self.request.user.id]})
+        serializer_obj = CourseSerializer(
+            data={'name': request.data['name'], 'description': request.data['description'],
+                  'period_from': request.data['period_from'], 'period_to': request.data['period_to'],
+                  'user_id': [self.request.user.id]})
         if serializer_obj.is_valid():
             serializer_obj.save()
             return Response(serializer_obj.data, status=status.HTTP_201_CREATED)
