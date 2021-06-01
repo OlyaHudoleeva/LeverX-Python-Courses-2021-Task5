@@ -11,5 +11,7 @@ urlpatterns = [
     path('auth/registration', views.UserRegistration.as_view()),
     path('auth/', include('djoser.urls.authtoken')),
     path('courses/', views.CourseList.as_view()),
-    path('courses/<int:pk>', views.CourseDetail.as_view())
+    path('courses/<int:pk>', views.CourseDetail.as_view()),
+    path('add/user/course/<int:pk>', views.UserToCourseAddition.as_view()),
+    path('delete/user/course/<int:pk>', views.UserFromCourseRemover.as_view())
 ]

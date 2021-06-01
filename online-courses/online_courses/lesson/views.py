@@ -3,7 +3,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Course, Student, Teacher
+from .models import Course, Student, Teacher, User
 from .permissions import IsTeacherOrReadOnly
 from .serializers import CourseSerializer, UserCreateSerializer
 
@@ -71,6 +71,42 @@ class CourseDetail(APIView):
         course = self.get_object(pk)
         course.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class UserToCourseAddition(APIView):
+    permission_classes = [IsTeacherOrReadOnly]
+
+    def patch(self, request, pk):
+        try:
+            course = Course.objects.get(pk=pk, user_id=request.user.pk)
+            if course:
+                new_user = User.objects.get(id=request.data['user_id'])
+                course.user_id.add(new_user)
+                serializer = CourseSerializer(course)
+            else:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        except Course.DoesNotExist:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class UserFromCourseRemover(APIView):
+    permission_classes = [IsTeacherOrReadOnly]
+
+    def delete(self, request, pk):
+        try:
+            course = Course.objects.get(pk=pk, user_id=request.user.pk)
+            if course:
+                user_to_delete = User.objects.get(id=request.data['user_id'])
+                course.user_id.remove(user_to_delete)
+                serializer = CourseSerializer(course)
+            else:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        except Course.DoesNotExist:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+
+
 
 #
 # class LectureAPI(viewsets.ModelViewSet):
