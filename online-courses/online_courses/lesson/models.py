@@ -1,6 +1,6 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.conf import settings
 
 
 class User(AbstractUser):
@@ -13,13 +13,13 @@ class User(AbstractUser):
     ]
 
     role = models.CharField(max_length=1, choices=ROLES)
-    # course_id = models.ManyToManyField('Course', related_name='user_course_id')
 
     REQUIRED_FIELDS = ['email', 'password', 'role']
     USERNAME_FIELD = 'username'
 
     def get_username(self):
         return self.username
+
 
 class Student(models.Model):
     id = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True)
@@ -49,9 +49,18 @@ class Homework(models.Model):
     lecture_id = models.ForeignKey(Lecture, on_delete=models.CASCADE)
 
 
-class StudentsToHomeworks(models.Model):
-    value = models.SmallIntegerField()
-    student_comment = models.TextField()
-    teacher_comment = models.TextField()
-    student_id = models.ForeignKey(Student, on_delete=models.PROTECT)
-    homework_id = models.ForeignKey(Homework, on_delete=models.PROTECT)
+class UsersToHomeworks(models.Model):
+    COMPLETED = 'C'
+    NOT_COMPLETED = 'N'
+
+    STATUSES = [
+        (COMPLETED, 'completed'),
+        (NOT_COMPLETED, 'not completed'),
+    ]
+
+    rate = models.SmallIntegerField(blank=True, null=True)
+    status = models.CharField(max_length=1, choices=STATUSES, blank=True, null=True)
+    student_comment = models.TextField(blank=True, null=True)
+    teacher_comment = models.TextField(blank=True, null=True)
+    user_id = models.ForeignKey(User, on_delete=models.PROTECT, blank=True, null=True)
+    homework_id = models.ForeignKey(Homework, on_delete=models.PROTECT, blank=True, null=True)
