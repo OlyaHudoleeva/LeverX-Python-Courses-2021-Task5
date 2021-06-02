@@ -1,9 +1,7 @@
-from django.conf import settings
-from django.conf.urls.static import static
-from django.contrib import admin
 from django.urls import path, include
-from rest_framework import routers
+
 from lesson import views
+
 # from lesson.router import router
 
 urlpatterns = [
@@ -13,5 +11,9 @@ urlpatterns = [
     path('courses/', views.CourseList.as_view()),
     path('courses/<int:pk>', views.CourseDetail.as_view()),
     path('add/user/course/<int:pk>', views.UserToCourseAddition.as_view()),
-    path('delete/user/course/<int:pk>', views.UserFromCourseRemover.as_view())
+    path('delete/user/course/<int:pk>', views.UserFromCourseRemover.as_view()),
+    path('student/courses/list', views.StudentCoursesList.as_view()),
+    path('course/lectures/', views.LectureList.as_view()),
+    path('course/lectures/<int:pk>', views.LectureDetail.as_view()),
+    path('user/course/<int:pk>/lectures/list/', views.CourseLecturesList.as_view())
 ]
