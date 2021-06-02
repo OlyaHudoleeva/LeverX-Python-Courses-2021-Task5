@@ -15,5 +15,11 @@ urlpatterns = [
     path('student/courses/list', views.StudentCoursesList.as_view()),
     path('course/lectures/', views.LectureList.as_view()),
     path('course/lectures/<int:pk>', views.LectureDetail.as_view()),
-    path('user/course/<int:pk>/lectures/list/', views.CourseLecturesList.as_view())
+    path('user/course/<int:pk>/lectures/list/', views.CourseLecturesList.as_view()),
+    path('course/lecture/homework/add', views.HomeworkToLectureAddition.as_view()),
+    path('user/course/lecture/<int:pk>/homeworks/list', views.LectureHomeworksList.as_view()),
+    path('student/homeworks/list', views.StudentHomeworksList.as_view()),
+    path('student/homework/complete', views.StudentHomeworkFinishing.as_view()),
+    path('homeworks/completed/list', views.CompletedStudentsHomeworksList.as_view())
+
 ]

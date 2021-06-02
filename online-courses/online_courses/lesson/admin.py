@@ -8,5 +8,5 @@ admin.site.register(Teacher)
 admin.site.register(Course)
 admin.site.register(Lecture)
 admin.site.register(Homework)
-admin.site.register(StudentsToHomeworks)
+admin.site.register(UsersToHomeworks)
 
