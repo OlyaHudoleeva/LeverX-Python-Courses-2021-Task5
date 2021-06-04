@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 
 online-courses/.idea/
+online-courses/online_courses/media/
