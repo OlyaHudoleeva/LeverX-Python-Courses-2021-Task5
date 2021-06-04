@@ -1,3 +1,5 @@
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -6,7 +8,7 @@ from rest_framework.views import APIView
 from .models import Course, Student, Teacher, User, Lecture, Homework, UsersToHomeworks
 from .permissions import IsTeacherOrReadOnly, IsStudentOrReadOnly
 from .serializers import CourseSerializer, UserCreateSerializer, LectureSerializer, HomeworkSerializer, \
-    StudentsToHomeworksSerializer
+    UsersToHomeworksSerializer
 
 
 class UserRegistration(APIView):
@@ -230,7 +232,7 @@ class StudentHomeworkFinishing(APIView):
     permission_classes = [IsStudentOrReadOnly]
 
     def post(self, request):
-        serialized_obj = StudentsToHomeworksSerializer(
+        serialized_obj = UsersToHomeworksSerializer(
             data={'status': 'C', 'student_id': Student.objects.get(id=request.user.id).id,
                   'homework_id': Homework.objects.get(id=request.data['homework_id'],
                                                       lecture_id__course_id__user_id=request.user.id).id})
@@ -245,14 +247,66 @@ class CompletedStudentsHomeworksList(APIView):
 
     def get(self, request):
         teacher_users_to_homeworks = UsersToHomeworks.objects.filter(user_id=request.user.id)
-        teacher_homeworks = []
+        completed_homeworks = []
         for teacher_homework in teacher_users_to_homeworks:
             homework = Homework.objects.get(id=teacher_homework.homework_id_id)
-            completed_by = UsersToHomeworks.objects.filter(homework_id_id=homework.id, status=UsersToHomeworks.COMPLETED)
+            completed_by = UsersToHomeworks.objects.filter(homework_id_id=homework.id,
+                                                           status=UsersToHomeworks.COMPLETED)
             students = []
             for user_to_homework in completed_by:
                 student = User.objects.get(id=user_to_homework.user_id_id)
                 students.append({'id': student.id, 'first_name': student.first_name, 'last_name': student.last_name})
-            teacher_homeworks.append({'id': homework.id, 'description': homework.description, 'students': students})
+            completed_homeworks.append({'id': homework.id, 'description': homework.description, 'students': students})
 
-        return Response(teacher_homeworks, status=status.HTTP_200_OK)
+        return Response(completed_homeworks, status=status.HTTP_200_OK)
+
+
+class RateOrCommentToStudentHomeworkAddition(APIView):
+    permission_classes = [IsTeacherOrReadOnly]
+
+    user_id_param_config = openapi.Parameter('user_id', in_=openapi.IN_QUERY, description='User ID',
+                                             type=openapi.TYPE_INTEGER)
+    homework_id_param_config = openapi.Parameter('homework_id', in_=openapi.IN_QUERY, description='User ID',
+                                                 type=openapi.TYPE_INTEGER)
+
+    @swagger_auto_schema(manual_parameters=[user_id_param_config, homework_id_param_config])
+    def patch(self, request):
+        student_completed_homework = UsersToHomeworks.objects.filter(homework_id=request.data['homework_id'],
+                                                                     user_id=request.data['user_id'],
+                                                                     status=UsersToHomeworks.COMPLETED).first()
+
+        serialized_completed_hw = UsersToHomeworksSerializer(student_completed_homework, data=request.data)
+        if serialized_completed_hw.is_valid():
+            serialized_completed_hw.save()
+            return Response(serialized_completed_hw.data, status=status.HTTP_200_OK)
+        return Response(serialized_completed_hw.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class StudentCommentToRateAddition(APIView):
+    permission_classes = [IsStudentOrReadOnly]
+
+    def patch(self, request):
+        homework_with_rate = UsersToHomeworks.objects.filter(homework_id=request.data['homework_id'],
+                                                             user_id=request.data['user_id'],
+                                                             status=UsersToHomeworks.COMPLETED).first()
+
+        serialized_completed_hw = UsersToHomeworksSerializer(homework_with_rate, data=request.data)
+        if serialized_completed_hw.is_valid():
+            serialized_completed_hw.save()
+            return Response(serialized_completed_hw.data, status=status.HTTP_200_OK)
+        return Response(serialized_completed_hw.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class HomeworkRatesList(APIView):
+    permission_classes = [IsStudentOrReadOnly]
+
+    def get(self, request):
+        student_users_to_homeworks = UsersToHomeworks.objects.filter(user_id=request.user.id,
+                                                                     status=UsersToHomeworks.COMPLETED)
+        homeworks_with_rate = []
+        for student_homework in student_users_to_homeworks:
+            homework = Homework.objects.get(id=student_homework.homework_id_id)
+            homeworks_with_rate.append(
+                {'id': homework.id, 'description': homework.description, 'rate': student_homework.rate,
+                 'teacher_comment': student_homework.teacher_comment})
+        return Response(homeworks_with_rate, status=status.HTTP_200_OK)

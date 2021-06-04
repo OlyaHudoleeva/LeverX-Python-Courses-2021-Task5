@@ -45,7 +45,7 @@ class HomeworkSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class StudentsToHomeworksSerializer(serializers.ModelSerializer):
+class UsersToHomeworksSerializer(serializers.ModelSerializer):
     class Meta:
         model = UsersToHomeworks
         fields = '__all__'
