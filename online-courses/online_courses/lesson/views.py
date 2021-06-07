@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.db import transaction
 
 from .models import Course, Student, Teacher, User, Lecture, Homework, UsersToHomeworks
 from .permissions import IsTeacherOrReadOnly, IsStudentOrReadOnly
@@ -15,18 +16,18 @@ class UserRegistration(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-
-        serializer_obj = UserCreateSerializer(data=request.data)
-        if serializer_obj.is_valid():
-            serializer_obj.save()
-            if serializer_obj.data.get('role') == 'T':
-                new_teacher = Teacher.objects.create(id=serializer_obj.instance)
-                new_teacher.save()
-            elif serializer_obj.data.get('role') == 'S':
-                new_student = Student.objects.create(id=serializer_obj.instance)
-                new_student.save()
-            return Response(serializer_obj.data, status=status.HTTP_201_CREATED)
-        return Response(serializer_obj.errors, status=status.HTTP_400_BAD_REQUEST)
+        with transaction.atomic():
+            serializer_obj = UserCreateSerializer(data=request.data)
+            if serializer_obj.is_valid():
+                serializer_obj.save()
+                if serializer_obj.data.get('role') == 'T':
+                    new_teacher = Teacher.objects.create(id=serializer_obj.instance)
+                    new_teacher.save()
+                elif serializer_obj.data.get('role') == 'S':
+                    new_student = Student.objects.create(id=serializer_obj.instance)
+                    new_student.save()
+                return Response(serializer_obj.data, status=status.HTTP_201_CREATED)
+            return Response(serializer_obj.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CourseList(APIView):
@@ -181,6 +182,7 @@ class CourseLecturesList(APIView):
 class HomeworkToLectureAddition(APIView):
     permission_classes = [IsTeacherOrReadOnly]
 
+    @transaction.atomic
     def post(self, request):
         serializer_hw = HomeworkSerializer(data={'description': request.data['description'],
                                                  'lecture_id': Lecture.objects.get(id=request.data['lecture_id'],
