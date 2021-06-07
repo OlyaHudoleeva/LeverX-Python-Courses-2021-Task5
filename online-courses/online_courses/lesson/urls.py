@@ -2,8 +2,6 @@ from django.urls import path, include
 
 from lesson import views
 
-# from lesson.router import router
-
 urlpatterns = [
     path('auth/registration', views.UserRegistration.as_view()),
     path('auth/', include('djoser.urls.authtoken')),
